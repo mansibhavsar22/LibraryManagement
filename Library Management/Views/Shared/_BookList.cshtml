@@ -1,0 +1,193 @@
+﻿@model Library_Management.Models.BooksClass
+
+<style>
+    table#t01 {
+        width: 100%;
+    }
+        table#t01 tr:nth-child(even) {
+            background-color: #eee;
+        }
+
+        table#t01 tr:nth-child(odd) {
+            background-color: #fff;
+        }
+
+        table#t01 th {
+            color: white;
+            background-color: blue;
+        }
+
+    th, td {
+        padding: 15px;
+    }
+
+    .Pager ul {
+        list-style-type: none;
+        text-align: center;
+        display: flex;
+    }
+
+    .Pager li {
+        /*background-color: white;*/
+        
+        border: 1px solid;
+        padding: 2px;
+    }
+
+    #li1 {
+        background-color: lightblue;
+        padding: 2px;
+        color: #333;
+    }
+</style>
+
+<div id="PagingMessageShow">
+
+    @{int FromValue; var pagesize = Model.PageSize; var pagenumbers = Model.PageNumber; var totalrecords = Model.TotalRecords; int ToValue;
+        var ToValueTemp = Model.PageNumber * Model.PageSize; }
+
+    @if (Model.PageNumber == 1)
+    {
+        FromValue = 1;
+    }
+    else   {
+        FromValue = (pagesize * (pagenumbers - 1)) + 1;
+    }
+
+    @if (ToValueTemp > totalrecords)
+    {
+        ToValue = totalrecords;
+    }
+    else
+    {
+       ToValue = ToValueTemp;
+    }
+    <label id="Records" style="color:dodgerblue">Showing Records @FromValue to @ToValue Records of @totalrecords </label>
+
+</div>
+
+<table id="t01" class="table">
+    <tr>
+        @* <th> Book ID</th>*@
+        <th> Book Name</th>
+        <th> Book Publication</th>
+        <th> Book Cateogry</th>
+        <th> Book Quantity</th>
+        <th>Edit</th>
+        <th>Edit Using Modal</th>
+        <th>Delete</th>
+    </tr>
+
+    @{
+        if (Model.bookslist != null)
+        {
+            foreach (var Data in Model.bookslist)
+            {
+        <tr>
+            @*<td>@Data.BookId</td>*@
+            <td>@Data.BookName</td>
+            <td>@Data.PublisherName</td>
+            <td>@Data.CategoryName</td>
+            <td>@Data.BookQuantity</td>
+            <td>@Html.ActionLink("Edit", "BooksInsert", new { id = Data.BookId }) </td>
+           @* <td><a href="" data-id="@Data.BookId" data-toggle="ajax-modal" class="EditBook" id="editbook">EditBook</a></td>*@
+            <td><button type="button" onclick="editbook( @Data.BookId )">Edit</button></td>
+            @* <td><button type="button" class="btn btn-primary" data-toggle="ajax-modal" data-url="@Url.Action($"Books/{Data.BookId}")"></button></td>*@
+            <td><button type="button" onclick="deleteBook( @Data.BookId, '@Data.BookName' )">Delete</button></td>
+        </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="5">Data Not Found</td></tr>
+        }
+    }
+</table>
+
+    <div id="pagediv" class="Pager">
+
+        <ul class="pagination">
+            @if (Model.PageNumber > 1) {                
+                <li><a id='prev' href='#'>Previous</a></li>
+            }
+
+            @for (var i = 1; i <= Model.TotalPages; i++) {
+                if (i == Model.PageNumber) {
+                    <li id="li1"><a href="" id="SelectedPage"> @i </a></li>
+                }
+                else{
+                    <li><a id='SelectedPage' href='#'>  @i </a></li>
+                }
+            }
+
+            @if (Model.PageNumber != Model.TotalPages) {
+                <li><a id='next' href='#'>Next</a></li>
+            }
+        </ul>
+
+    </div>
+
+    <!--<div class="modal fade" id="insertmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title">Insert Book</h3>
+                </div>
+                <div class="modal-body">
+                    <form id="insertbook" method="post">
+                        <div class="active">
+
+                            @Html.Hidden("BookId", Model.BookId)
+                            @Html.TextBoxFor(model => Model.BookId, null, new { @class = "hidden", @id = "bkid" })
+
+                            <div class="col-md-12">
+                                <b>Book Name : </b>
+                                @Html.TextBoxFor(model => Model.BookName, null, new { @class = "form-control", @placeholder = "Enter Book Name ", @id = "bkname" })-->
+
+                                @* @Html.ValidationMessageFor(model => Model.BookName, null, new { @class = "text-danger" })*@
+                            <!--</div>
+                            <br />
+
+                            <div class="col-md-6">
+                                <label class="form-label">Category Type</label>
+                                <br />
+                                @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.categorieslist, "CategoryId", "CategoryName"),
+                               "Select Category", new { @class = "form-control", @id = "bkcategory" })
+
+                                @Html.ValidationMessageFor(model => Model.CategoryId, null, new { @class = "text-danger" })
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Publihser Name</label>
+                                <br />
+                                @Html.DropDownListFor(model => model.PublisherId, new SelectList(Model.publisherslist, "PublisherId", "PublisherName"),
+                               "Select Publisher", new { @class = "form-control", @id = "bkpublisher" })
+
+                                @Html.ValidationMessageFor(model => Model.PublisherId, null, new { @class = "text-danger" })
+                            </div>
+                            <br /><br />
+                            <div class="col-md-6">
+                                <br />
+                                <label class="form-label">IsActive</label>
+                                @Html.CheckBoxFor(model => model.IsActive, new { @id = "bkisactive" })
+                                @Html.ValidationMessageFor(model => Model.IsActive, null, new { @class = "text-danger" })
+                            </div>
+                            <hr />
+                            <br />-->
+                            @*<input id="saveBtn" type="button" value="Save" class="btn btn-primary" />
+                            <input type="button" value="Cancel" class="btn btn-danger" onclick="javascript:history.back(1); " />*@
+                        <!--</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <a href="#" class="btn btn-success" id="saveBtn">Save</a>
+                </div>
+            </div>
+        </div>
+    </div>-->
+
+
+
+

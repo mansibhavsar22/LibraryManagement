@@ -1,0 +1,124 @@
+﻿@using Library_Management.Models
+@model Library_Management.Models.BooksClass
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>BooksInsert</title>
+
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-3.6.0.min.js"></script>
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src='@Url.Content("~/Scripts/jquery.validate.js")' type='text/javascript'></script>
+
+    <style>
+        .style{
+            padding:30px;
+            padding-right:250px;
+            padding-left:250px;
+        }
+    </style>
+</head>
+<body>
+    <div id="form">
+
+        </div>
+    
+   
+    <div class="style">
+        <h2>Add Book</h2>
+        <br />
+        <form id="addbook" method="post">
+            <div class="active">
+
+                @Html.Hidden("BookId", Model.BookId)
+                @Html.TextBoxFor(model => Model.BookId, null, new { @class = "hidden", @id = "BookId" })
+
+                <div class="col-md-12">
+                    <b>Book Name : </b>
+                    @Html.TextBoxFor(model => Model.BookName, null, new { @class = "form-control", @placeholder = "Enter Book Name ", @id = "bookname" })
+                    @Html.ValidationMessageFor(model => Model.BookName, null, new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Category Type</label>
+                    <br />
+                    @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.categorieslist, "CategoryId", "CategoryName"), "Select Category", new { @class = "form-control", @id = "category" })
+
+                    @Html.ValidationMessageFor(model => Model.CategoryId, null, new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Publihser Name</label>
+                    <br />
+                    @Html.DropDownListFor(model => model.PublisherId, new SelectList(Model.publisherslist, "PublisherId", "PublisherName"), "Select Publisher", new { @class = "form-control", @id = "publisher" })
+
+                    @Html.ValidationMessageFor(model => Model.PublisherId, null, new { @class = "text-danger" })
+                </div>
+                <br /><br />
+                <div class="col-md-6">
+                    <label class="form-label">IsActive</label>
+                    @Html.CheckBoxFor(model => model.IsActive, new { @id = "isactive" })
+                    @Html.ValidationMessageFor(model => Model.IsActive, null, new { @class = "text-danger" })
+                </div>
+                <hr />
+                <br />
+                <input id="saveBtn" type="button" value="Save" class="btn btn-primary" />
+
+                <input type="button" value="Cancel" class="btn btn-danger" onclick="javascript:history.back(1); " />
+
+                @* <input type="button" value="Cancel" class="btn btn-danger" onclick="@("window.location.href='" + @Url.Action("Books", "Books") + "'");" />*@
+
+            </div>
+        </form>
+    </div>
+   
+
+    <script>
+        $(document).ready(function () {
+            $("#saveBtn").click(function () {
+                console.log($("#addbook").validate());
+                if ($("#addbook").valid()) {
+                    savebook();
+                }
+            });
+        })
+
+        function savebook() {
+            var bookadd = new Object();
+            bookadd.BookId = $('#BookId').val();
+            bookadd.BookName = $('#bookname').val();
+            bookadd.CategoryId = $('#category').val();
+            bookadd.PublisherId = $('#publisher').val();
+            bookadd.IsActive = $('#isactive').val();
+
+            debugger;
+            $.ajax({
+                url: "/Books/BooksInsert",
+                method: "POST",
+                data: $("#addbook").serialize(),
+                success: function (add) {
+                    debugger;
+                    console.log(add);
+                    alert(add);
+                    debugger;
+                },
+                error: function (err) {
+                    console.error("Fail " + err);
+                }
+            })
+        };
+    </script>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+</body>
+</html>

@@ -1,0 +1,78 @@
+﻿@model Library_Management.Models.BooksClass
+
+<style>
+    table#t01 {
+        width: 100%;
+    }
+
+        table#t01 tr:nth-child(even) {
+            background-color: #eee;
+        }
+
+        table#t01 tr:nth-child(odd) {
+            background-color: #fff;
+        }
+
+        table#t01 th {
+            color: white;
+            background-color: blue;
+        }
+
+    th, td {
+        padding: 15px;
+    }
+
+    .Pager ul {
+        list-style-type: none;
+        text-align: center;
+        display: flex;
+    }
+
+    .Pager li {
+        /*background-color: white;*/
+        border: 1px solid;
+        padding: 2px;
+    }
+
+    #li1 {
+        background-color: lightblue;
+        padding: 2px;
+        color: #333;
+    }
+</style>
+
+<table id="t02" class="table">
+    <thead>
+        <tr>
+            <th> Book Name</th>
+            <th> Book Publication</th>
+            <th> Book Cateogry</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            if (Model.bookslist != null)
+            {
+                foreach (var Data in Model.bookslist)
+                {
+                    <tr>
+                        @*<td>@Data.BookId</td>*@
+                        <td>@Data.BookName</td>
+                        <td>@Data.PublisherName</td>
+                        <td>@Data.CategoryName</td>
+                        @*<td>@Html.ActionLink("Select", "IssueBook", new { id = @Data.BookId }) </td>*@
+                       @* <td><center> @Html.CheckBox("Select", new { @id = "select", @onclick = "add(" + @Data.BookId + ")" }) </center></td>*@
+                        <td><center><button type="button" class="btn btn-info" id="select" onclick="add( @Data.BookId )">Select</button> </center></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5">Data Not Found</td></tr>
+            }
+        }
+    </tbody> 
+   
+</table>
+

@@ -1,0 +1,449 @@
+﻿@model Library_Management.Models.BooksClass
+
+@{
+    ViewBag.Title = "Books";
+}
+<style>
+    .modal-dialog{
+        margin-left:auto;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+<script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+
+<h2>Books Section</h2>
+<div>
+    <div>
+        <form id="SearchForm" class="row g-3" method="post">
+
+            @Html.Hidden("BookId", new { @id = "BookId" })
+
+            <div class="col-12">
+                <label class="form-label">Book Name</label>
+                @Html.TextBoxFor(model => Model.BookName, null, new { @class = "form-control", @placeholder = "Enter Book Name ", @id = "bookname" })
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Category Type</label>
+                <br />
+                @*@Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.categorieslist, "CategoryId", "CategoryName"),
+                    "Select Category", new { @class = "form-control", @id = "category" })*@
+                <select id="category" multiple="multiple">
+                    @foreach (var item in Model.categorieslist)
+                    {
+                        <option value="@item.CategoryId">@item.CategoryName</option>
+                    }
+                </select>
+                @*@Html.DropDownListFor(exp => exp.CategoryId, new SelectList(Model.categorieslist, "CategoryId", "CategoryName"), "SELECT CATEGORY",
+                    new { @id = "category", @multiple = "multiple", @class = "btn btn-round btn-outline btn-fb text-left w-100 mb-3" })*@
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Publihser Name</label>
+                <br />
+                @*@Html.DropDownListFor(model => model.PublisherId, new SelectList(Model.publisherslist, "PublisherId", "PublisherName"),
+                    "Select Publisher", new { @class = "form-control", @id = "publisher" })*@
+                <select id="publisher" multiple="multiple">
+                    @foreach (var item in Model.publisherslist)
+                    {
+                        <option value="@item.PublisherId">@item.PublisherName</option>
+                    }
+                </select>
+            </div>
+
+            @*@Html.HiddenFor(m => m.PageNumber, new { id = "PageNumber" })*@
+            @Html.Hidden("PageNumber", 1, new { @id = "PageNumber" })
+            @Html.HiddenFor(model => model.CategoryId, new { })
+            @Html.HiddenFor(model => model.PublisherId, new { })
+
+            <br />
+            <hr />
+            <br />
+
+            <input id="submitBtn" type="button" value="Search" class="btn btn-success" />
+
+            <input id="resetBtn" type="reset" value="Clear" class="btn btn-danger" />
+
+            <input type="button" value="Add Book" class="btn btn-primary" onclick="@("window.location.href='" + @Url.Action("BooksInsert", "Books") + "'");" />
+
+            <input type="button" value="Insert Book" class="btn btn-primary" onclick="insertbook()" />
+
+            <br />
+            <div class="main_sub">
+                <br />
+                <label>Page Size</label>
+                @Html.DropDownList("PageSize", new List<SelectListItem> {
+                //new SelectListItem { Text = "Select Page Size", Value = "Select Page Size" },
+                new SelectListItem { Text = "3", Value = "3" },
+                new SelectListItem { Text = "5", Value = "5" },
+                new SelectListItem { Text = "10", Value = "10" } }, new { @class = "form-control", id = "PageSize" })
+            </div>
+            <br />
+
+            @*<label id="Message" style="color:dodgerblue"> </label>*@
+
+            <div class="col-12">
+                <div class="col-2">
+                </div>
+                <div class="col-8" id="booktable">
+                    <table id="t01" class="table table-hover"></table>
+                    <div id="PagingMessageShow">
+                    </div>
+                    <div id="_BookList">
+                    </div>
+                    <div id="pagediv" class="Pager">
+                    </div>
+                </div>
+            </div>
+
+            @* @Html.Partial("_BookList", Model)*@
+
+            <div class="modal fade" id="myModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <a href="#" class="close" data-dismiss="modal">&times;</a>
+                            <h3 class="modal-title">Delete Book</h3>
+                        </div>
+                        <div class="modal-body">
+                            <h4>Are you sure, you want to delete ? </h4>
+                            <h4>Book -</h4><h4 id="h4Bookname"></h4>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <a href="#" class="btn btn-success" id="confirmdelete">Confirm</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="col-lg-12">
+                    <ul id="paging" class="pagination"></ul>
+                </div>*@
+        </form>
+
+        <div class="modal fade" id="insertmodal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a href="#" class="close" data-dismiss="modal">&times;</a>
+                        <h3 class="modal-title">Insert Book</h3>
+                    </div>
+                    <div class="modal-body">
+                        <form id="insertbook" method="post">
+                            <div class="active">
+
+                                @* @Html.Hidden("BookId", Model.BookId)*@
+                                @Html.TextBoxFor(model => Model.BookId, null, new { @class = "hidden", @id = "bkid" })
+
+                                <div class="col-md-12">
+                                    <b>Book Name : </b>
+                                    @Html.TextBoxFor(model => Model.BookName, null, new { @class = "form-control", @placeholder = "Enter Book Name ", @id = "bkname" })
+
+                                    @* @Html.ValidationMessageFor(model => Model.BookName, null, new { @class = "text-danger" })*@
+                                </div>
+                                <br />
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Category Type</label>
+                                    <br />
+                                    @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.categorieslist, "CategoryId", "CategoryName"),
+                                   "Select Category", new { @class = "form-control", @id = "bkcategory" })
+
+                                    @*  @Html.ValidationMessageFor(model => Model.CategoryId, null, new { @class = "text-danger" })*@
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Publihser Name</label>
+                                    <br />
+                                    @Html.DropDownListFor(model => model.PublisherId, new SelectList(Model.publisherslist, "PublisherId", "PublisherName"),
+                                   "Select Publisher", new { @class = "form-control", @id = "bkpublisher" })
+
+                                    @*  @Html.ValidationMessageFor(model => Model.PublisherId, null, new { @class = "text-danger" })*@
+                                </div>
+                                <br /><br />
+                                <div class="col-md-6">
+                                    <br />
+                                    <label class="form-label">IsActive</label>
+                                    @Html.CheckBoxFor(model => model.IsActive, new { @id = "bkisactive" })
+                                    @*   @Html.ValidationMessageFor(model => Model.IsActive, null, new { @class = "text-danger" })*@
+                                </div>
+                                <hr />
+                                <br />
+                                @*<input id="saveBtn" type="button" value="Save" class="btn btn-primary" />
+                                    <input type="button" value="Cancel" class="btn btn-danger" onclick="javascript:history.back(1); " />*@
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <a href="#" class="btn btn-success" id="saveBtn">Save</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('#category').multiselect({
+            includeSelectAllOption: true,
+            nonSelectedText: 'Select Category'
+        });
+        btnsearch();
+        $('#publisher').multiselect({
+            includeSelectAllOption: 'true',
+            nonSelectedText: 'Select Category'
+        });
+
+        btnsearch();
+    });
+
+    var editbook = function (id) {
+        debugger;
+        $.ajax({
+            url: "/Books/BooksInsertModal",
+            type: "GET",
+            data: { Id: id },
+            success: function (data) {
+                debugger;
+                $("#bkid").val(data.BookId);
+                $("#bkname").val(data.BookName);
+                $("#bkcategory").val(data.CategoryId);
+                $("#bkpublisher").val(data.PublisherId);
+                if (data.IsActive == true) {
+                    $("#bkisactive").prop("checked", true);
+                }
+                else {
+                    $("#bkisactive").prop("checked", false);
+                }
+                $("#insertmodal").modal('show');
+            }
+        });
+    }
+
+    //$("#saveBtn").click(function () {
+    //        console.log($("#insertbook").validate());
+    //        if ($("#insertbook").valid()) {
+    //                saveBtn();
+    //            }
+    //});
+
+    $("#saveBtn").click(function () {
+            saveBtn();
+    });
+
+        var insertbook = function () {
+            $("#insertmodal").modal('show');
+        }
+
+        var saveBtn = function () {
+            var bookadd = new Object();
+            bookadd.BookId = $('#bkid').val();
+            bookadd.BookName = $('#bkname').val();
+            bookadd.CategoryId = $('#bkcategory').val();
+            bookadd.PublisherId = $('#bkpublisher').val();
+            bookadd.IsActive = $('#bkisactive').val();
+
+            $.ajax({
+                url: "/Books/BooksInsert",
+                method: "POST",
+                data: $("#insertbook").serialize(),
+                success: function (add) {
+                    console.log(add);
+                    alert(add);
+                    $("#insertmodal").modal("hide");
+                    btnsearch();
+
+                },
+                error: function (err) {
+                    console.error("Fail " + err);
+                }
+            })
+        };
+
+        $("#confirmdelete").click(function () {
+            confirmdelete();
+        });
+
+        var deleteBook = function (id,name) {
+            debugger;
+            $("#BookId").val(id);
+            $("#myModal").modal('show');
+            $("#bookname").val(name);
+            $("#h4Bookname").text(name);
+        }
+
+        var confirmdelete = function (id) {
+            var bookId = $("#BookId").val();
+
+            $.ajax({
+                url: '/Books/Delete/',
+                method: 'POST',
+                data: { id: bookId },
+                success: function (resp) {
+                    debugger;
+                    $("#myModal").modal("hide");
+                    btnsearch();
+                },
+            })
+        }
+
+        function btnsearch() {
+
+            $.ajax({
+                url: "/Books/BooksJson",
+                method: "POST",
+                data: $("#SearchForm").serialize(),
+                success: function (data) {
+                    $("#t01").html(data);
+                   // console.log(data);
+                    //var bookData = '';
+                    //var tem = '';
+                    //var PageNumber = data.PageNumber;
+                    //var PageSize = data.PageSize;
+                    //debugger;
+
+                    //var TotalRecords = data.TotalRecords;
+
+                    // $.each(data.bookslist, function (key, value) {
+
+                    //bookData += '<tr>';
+                    //bookData += '<td>' + value.BookId + '</td>';
+                    //bookData += '<td>' + value.BookName + '</td>';
+                    // bookData += '<td>' + value.PublisherName + '</td>';
+                    // bookData += '<td>' + value.CategoryName + '</td>';
+                    @* bookData += '<td>' + "<a href='@Url.Action("BooksInsert", "Books", new { " + value.BookId + " })' >Edit</a>" + '</td>';*@
+                     //   bookData += '<td>' + "<a href='/Books/BooksInsert/" + value.BookId + "'>Edit</a>" + '</td>';
+                      //  bookData += '<td>' + '<button type="button" data-name= ' + value.BookName + ' onclick="deleteBook(' + value.BookId + ',\'' + value.BookName + '\')"><a>Delete</a></button></td>';
+                     //   bookData += '</tr>';
+                  //  });
+
+                 //   $("#tbody").html(bookData);
+
+                    //$('#paging').html('');
+
+                    //var totalPages;
+
+                    //if (data.PageSize > 0) {
+                    //    totalPages = Math.ceil(TotalRecords / data.PageSize);
+                    //} else {
+                    //    totalPages = Math.ceil(TotalRecords / 15);
+                    //}
+
+                    //if (data.PageNumber != 1) {
+                    //    tem += '<li class="page-item"><button id="prev">Prev</button></li>';
+                    //}
+
+                    //for (var i = 1; i <= totalPages; i++) {
+                    //    if (data.PageNumber == i) {
+                    //        tem += '<li class="active"> <a  id="SelectedPage" >' + i + '</a> </li>';
+                    //    } else {
+                    //        tem += '<li> <a  id="SelectedPage">' + i + '</a> </li>';
+                    //    }
+                    //}
+
+                    //if (data.PageNumber != totalPages) {
+                    //    tem += '<li class="page-item"><button id="next" >Next</button></li>';
+                    //}
+
+                    //$('#paging').html(tem);
+                    //console.log('Page Number : ' + data.PageNumber + ' Page Size : ' + data.PageSize + ' Total Records : ' + TotalRecords);
+
+                    //if ((PageNumber * PageSize) > TotalRecords) {
+                    //    var Message = 'Showing ' + ((PageNumber - 1) * PageSize + 1) + ' to ' + TotalRecords + ' Records of ' + TotalRecords;
+                    //} else {
+                    //    if (PageNumber == 1) {
+                    //        var Message = 'Showing ' + PageNumber + ' to ' + (PageNumber * PageSize) + ' Records of ' + TotalRecords;
+                    //    } else {
+                    //        var Message = 'Showing ' + ((PageNumber - 1) * PageSize + 1) + ' to ' + (PageNumber * PageSize) + ' Records of ' + TotalRecords;
+                    //    }
+                    //}
+                    //$('#Message').html(Message);
+                },
+                error: function (err) {
+                    console.error("In Fail " + err);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            btnsearch();
+
+            $(document).on("click", "#prev", function () {
+                var pagenumber = $("#PageNumber").val();
+                $("#PageNumber").val(parseInt(pagenumber) - 1);
+                btnsearch();
+            });
+
+            $(document).on("click", "#SelectedPage", function () {
+                var pagenumber = $(this).text();
+                $("#PageNumber").val(pagenumber);
+                btnsearch();
+            });
+
+            $(document).on("click", "#next", function () {
+                var pagenumber = $("#PageNumber").val();
+                $("#PageNumber").val(parseInt(pagenumber) + 1);
+                btnsearch();
+            });
+
+            $('ul').on('click', 'li', function () {
+                $(this).addClass('active');
+            });
+
+            $("#PageSize").change(function () {
+                $("#PageNumber").val(1);
+                btnsearch();
+            });
+
+            $("#submitBtn").click(function () {
+                $("#PageNumber").val(1);
+                debugger;
+                var CategoryId = "";
+                for (var key in $('#category').val()) {
+                    CategoryId += $('#category').val()[key] + ",";
+                }
+                $("#CategoryId").val(CategoryId.replace(/,\s*$/, ""));
+
+                var PublisherId = "";
+                for (var key in $('#publisher').val()) {
+                    PublisherId += $('#publisher').val()[key] + ",";
+                }
+                $("#PublisherId").val(PublisherId.replace(/,\s*$/, ""));
+
+                btnsearch();
+            });
+
+            $("#resetBtn").click(function () {
+                $("#PageNumber").val(1);
+                this.form.reset();
+                btnsearch();
+            });
+
+            //$("body").on("click", "#prev", function () {
+            //    var currentPage = $("#PageNumber").val();
+            //    $("#PageNumber").val(--currentPage);
+            //    btnsearch();
+            //});
+
+            //$("body").on("click", "#SelectedPage", function () {
+            //    $("#PageNumber").val($(this).text());
+            //    btnsearch();
+            //});
+
+            //$("body").on("click", "#next", function () {
+            //    var currentPage = $("#PageNumber").val();
+            //    $("#PageNumber").val(++currentPage);
+            //    btnsearch();
+            //});
+        })
+</script>
